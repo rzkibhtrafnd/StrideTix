@@ -1,0 +1,62 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Event;
+use App\Models\Organizer; // <--- Menggunakan Model Organizer
+use App\Services\EventService;
+use App\Http\Requests\EventRequest;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
+
+class EventController extends Controller
+{
+    public function __construct(
+        protected EventService $eventService
+    ) {}
+
+    public function index(): View
+    {
+        $events = $this->eventService->getAllEvents();
+        return view('admin.events.index', compact('events'));
+    }
+
+    public function create(): View
+    {
+        // Membaca data organizer profil langsung agar ada property company_name
+        $organizers = Organizer::latest()->get();
+        return view('admin.events.create', compact('organizers'));
+    }
+
+    public function store(EventRequest $request): RedirectResponse
+    {
+        $this->eventService->createEvent($request->validated());
+        return redirect()->route('admin.events.index')->with('success', 'Event lari baru berhasil diterbitkan.');
+    }
+
+    public function show(Event $event): View
+    {
+        $event->load('organizer');
+        return view('admin.events.show', compact('event'));
+    }
+
+    public function edit(Event $event): View
+    {
+        // Membaca data seluruh organizer profil instansi
+        $organizers = Organizer::latest()->get();
+        return view('admin.events.edit', compact('event', 'organizers'));
+    }
+
+    public function update(EventRequest $request, Event $event): RedirectResponse
+    {
+        $this->eventService->updateEvent($event, $request->validated());
+        return redirect()->route('admin.events.index')->with('success', 'Data informasi event berhasil diperbarui.');
+    }
+
+    public function destroy(Event $event): RedirectResponse
+    {
+        $this->eventService->deleteEvent($event);
+        return redirect()->route('admin.events.index')->with('success', 'Event berhasil dihapus dari sistem.');
+    }
+}

@@ -1,0 +1,29 @@
+<?php
+
+namespace App\Models;
+use App\Enums\EventStatus;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class Event extends Model
+{
+    protected $fillable = [
+        'organizer_id',
+        'title',
+        'description',
+        'location',
+        'google_maps_url',
+        'event_date',
+        'status',
+    ];
+
+    protected $casts = [
+        'event_date' => 'date',
+        'status' => EventStatus::class,
+    ];
+
+    public function organizer(): BelongsTo
+    {
+        return $this->belongsTo(Organizer::class, 'organizer_id');
+    }
+}
