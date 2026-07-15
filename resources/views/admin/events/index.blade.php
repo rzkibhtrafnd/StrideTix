@@ -56,7 +56,7 @@
                             </td>
                             <td class="px-3 py-3 text-center">
                                 <div class="flex items-center justify-center gap-2">
-                                    <a href="{{ route('admin.events.show', $event->id) }}" class="inline-flex items-center text-xs font-medium text-slate-600 bg-slate-50 border border-slate-100 rounded px-2.5 py-1 hover:bg-slate-100 focus:outline-none transition-colors">
+                                    <a href="{{ route('admin.events.show', $event->id) }}" class="inline-flex items-center text-xs font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded px-2.5 py-1 hover:bg-slate-100 transition-colors">
                                         <i class="mr-1 fa-solid fa-eye"></i>{{ __('Lihat') }}
                                     </a>
 

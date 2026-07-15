@@ -47,6 +47,18 @@
                 <i class="fa-solid fa-calendar-days w-5 text-lg transition-colors mr-3 {{ request()->routeIs('admin.events.*') ? 'text-white' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
                 {{ __('Kelola Event') }}
             </a>
+
+            <a href="{{ route('admin.race-categories.index') }}" 
+                class="flex items-center px-4 py-3 text-sm font-semibold rounded-lg transition-colors duration-200 group {{ request()->routeIs('admin.race-categories.*') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}">
+                <i class="fa-solid fa-list w-5 text-lg transition-colors mr-3 {{ request()->routeIs('admin.race-categories.*') ? 'text-white' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                {{ __('Kelola Kategori Lomba') }}
+            </a>
+
+            <a href="{{ route('admin.ticket-tiers.index') }}" 
+                class="flex items-center px-4 py-3 text-sm font-semibold rounded-lg transition-colors duration-200 group {{ request()->routeIs('admin.ticket-tiers.*') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}">
+                <i class="fa-solid fa-ticket w-5 text-lg transition-colors mr-3 {{ request()->routeIs('admin.ticket-tiers.*') ? 'text-white' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
+                {{ __('Kelola Tier Tiket') }}
+            </a>
         @endif
     </nav>
 

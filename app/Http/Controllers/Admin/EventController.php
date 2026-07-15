@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
-use App\Models\Organizer; // <--- Menggunakan Model Organizer
+use App\Models\Organizer;
 use App\Services\EventService;
 use App\Http\Requests\EventRequest;
 use Illuminate\Http\RedirectResponse;
@@ -24,7 +24,6 @@ class EventController extends Controller
 
     public function create(): View
     {
-        // Membaca data organizer profil langsung agar ada property company_name
         $organizers = Organizer::latest()->get();
         return view('admin.events.create', compact('organizers'));
     }
@@ -37,13 +36,12 @@ class EventController extends Controller
 
     public function show(Event $event): View
     {
-        $event->load('organizer');
+        $event->load(['organizer', 'raceCategories.ticketTiers']);
         return view('admin.events.show', compact('event'));
     }
 
     public function edit(Event $event): View
     {
-        // Membaca data seluruh organizer profil instansi
         $organizers = Organizer::latest()->get();
         return view('admin.events.edit', compact('event', 'organizers'));
     }
