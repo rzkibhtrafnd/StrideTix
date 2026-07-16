@@ -75,16 +75,18 @@
 
             <!-- Kolom Kanan: Pilihan Tiket (Sticky) -->
             <div class="lg:col-span-1">
-                <!-- Class 'sticky top-24' membuat elemen ini mengambang saat discroll ke bawah -->
                 <div class="bg-white border border-slate-200 shadow-xl rounded-2xl p-6 lg:sticky lg:top-24">
                     <h3 class="text-lg font-black text-slate-900 mb-1">Pilih Tiket Anda</h3>
                     <p class="text-xs text-slate-500 mb-6 border-b border-slate-100 pb-4">Tentukan kategori lari dan harga sesuai fase ketersediaan saat ini.</p>
 
                     <div class="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                         @forelse($event->raceCategories as $category)
-                            <div class="border border-slate-200 rounded-xl overflow-hidden">
+                            <div class="border border-slate-200 rounded-xl overflow-hidden mb-3">
                                 <div class="bg-slate-50 px-4 py-3 flex justify-between items-center border-b border-slate-200">
-                                    <div class="font-bold text-slate-800 text-sm">{{ $category->category_name }} <span class="text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded text-[10px] ml-1">{{ $category->distance_km }}K</span></div>
+                                    <div class="font-bold text-slate-800 text-sm">
+                                        {{ $category->category_name }} 
+                                        <span class="text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded text-[10px] ml-1">{{ $category->distance_km }}K</span>
+                                    </div>
                                 </div>
                                 
                                 <div class="p-3 divide-y divide-slate-100">
@@ -98,16 +100,16 @@
                                                 <div class="text-[10px] text-slate-400">
                                                     Penjualan: <br> {{ $tier->start_date->format('d M') }} - {{ $tier->end_date->format('d M Y') }}
                                                 </div>
-                                                <!-- Logika Tombol Sederhana -->
-                                                @if(now()->isBetween($tier->start_date, $tier->end_date) && $category->available_slot > 0)
-                                                    <button class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1.5 px-3 rounded transition">
-                                                        Pilih
-                                                    </button>
-                                                @else
-                                                    <button disabled class="bg-slate-100 text-slate-400 text-xs font-bold py-1.5 px-3 rounded cursor-not-allowed">
-                                                        Tutup
-                                                    </button>
-                                                @endif
+                                                <div>
+                                                    <!-- PEMBARUAN: Pengecekan status menjadi sangat ringkas menggunakan model Accessor -->
+                                                    @if($tier->status_label === 'tutup')
+                                                        <span class="text-slate-400 bg-slate-100 px-2 py-1 rounded font-bold text-[10px] uppercase tracking-wide">Belum Buka / Tutup</span>
+                                                    @elseif($tier->status_label === 'habis')
+                                                        <span class="text-red-500 bg-red-50 px-2 py-1 rounded font-bold text-[10px] uppercase tracking-wide">Habis</span>
+                                                    @else
+                                                        <span class="text-emerald-600 bg-emerald-50 px-2 py-1 rounded font-bold text-[10px] uppercase tracking-wide">Tersedia</span>
+                                                    @endif
+                                                </div>
                                             </div>
                                         </div>
                                     @empty
@@ -121,9 +123,9 @@
                     </div>
 
                     <div class="mt-6 pt-4 border-t border-slate-100">
-                        <button class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-xl transition shadow-lg flex justify-center items-center gap-2">
+                        <a href="{{ route('front.checkout.ticket', $event->id) }}" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-xl transition shadow-lg flex justify-center items-center gap-2 text-sm">
                             Lanjutkan Pendaftaran <i class="fa-solid fa-arrow-right"></i>
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>

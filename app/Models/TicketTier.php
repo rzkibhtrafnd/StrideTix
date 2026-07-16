@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Carbon\Carbon;
 
 class TicketTier extends Model
 {
@@ -24,6 +26,27 @@ class TicketTier extends Model
             'end_date' => 'date',
             'slot_limit' => 'integer',
         ];
+    }
+
+    protected function statusLabel(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                $today = Carbon::today();
+                
+                $isSalesActive = $today->greaterThanOrEqualTo($this->start_date->startOfDay()) && $today->lessThanOrEqualTo($this->end_date->endOfDay());
+
+                if (!$isSalesActive) {
+                    return 'tutup';
+                }
+
+                if ($this->slot_limit <= 0) {
+                    return 'habis';
+                }
+
+                return 'tersedia';
+            }
+        );
     }
 
     public function raceCategory(): BelongsTo

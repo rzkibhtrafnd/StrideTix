@@ -1,5 +1,4 @@
 <x-public-layout>
-    <!-- Hero Section Banner -->
     <section class="relative pt-24 pb-12 lg:pt-32 lg:pb-20 bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 overflow-hidden">
         <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
@@ -25,7 +24,6 @@
         </div>
     </section>
 
-    <!-- Daftar Katalog Event -->
     <section class="py-16">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-end justify-between mb-8">
@@ -36,22 +34,9 @@
                 <a href="#" class="hidden md:inline-block text-sm font-bold text-blue-600 hover:text-blue-700">Lihat Semua <i class="fa-solid fa-arrow-right ml-1 text-xs"></i></a>
             </div>
 
-            <!-- Grid Kartu Event -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 @forelse($events as $event)
-                    @php
-                        $minPrice = null;
-                        foreach($event->raceCategories as $cat) {
-                            $catMin = $cat->ticketTiers->min('price');
-                            if($catMin !== null) {
-                                if($minPrice === null || $catMin < $minPrice) {
-                                    $minPrice = $catMin;
-                                }
-                            }
-                        }
-                    @endphp
 
-                    <!-- Tautkan link ke route detail event -->
                     <a href="{{ route('front.event.show', $event->id) }}" class="group flex flex-col bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden h-full">
                         
                         <div class="relative aspect-[4/3] bg-gradient-to-tr from-slate-200 to-slate-100 overflow-hidden">
@@ -82,10 +67,10 @@
                                 <div>
                                     <p class="text-[10px] uppercase font-black text-slate-400 tracking-wider">Mulai Dari</p>
                                     <p class="text-blue-600 font-black text-lg">
-                                        @if($minPrice)
-                                            Rp{{ number_format($minPrice, 0, ',', '.') }}
+                                        @if($event->min_price)
+                                            Rp{{ number_format($event->min_price, 0, ',', '.') }}
                                         @else
-                                            <span class="text-sm text-slate-400">N/A</span>
+                                            <span class="text-sm text-slate-400">Belum ada harga</span>
                                         @endif
                                     </p>
                                 </div>
@@ -96,7 +81,6 @@
                         </div>
                     </a>
                 @empty
-                    <!-- Kosong... -->
                 @endforelse
             </div>
         </div>
