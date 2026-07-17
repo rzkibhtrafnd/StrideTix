@@ -14,7 +14,7 @@
                     </div>
                     
                     <h2 class="text-2xl font-black tracking-wide">Pemesanan Tiket Berhasil!</h2>
-                    <p class="text-emerald-100 text-xs mt-1 font-medium">Silakan lakukan pembayaran untuk mengamankan slot BIB lintasan Anda.</p>
+                    <p class="text-emerald-100 text-xs mt-1 font-medium">Slot BIB lintasan Anda telah resmi diamankan & dikunci.</p>
                 </div>
 
                 <div class="p-6 md:p-8 space-y-6">
@@ -60,18 +60,23 @@
                     <div class="p-4 bg-blue-50/50 border border-blue-100 rounded-2xl flex gap-3 items-start">
                         <i class="fa-solid fa-circle-info text-blue-500 mt-0.5 text-sm"></i>
                         <div class="text-xs text-slate-600 leading-relaxed">
-                            <p class="font-bold text-slate-800 mb-0.5">Petunjuk Pembayaran:</p>
-                            Sistem pembayaran otomatis menggunakan Payment Gateway sedang dikonfigurasi. E-ticket resmi beserta nomor dada lintasan (BIB) otomatis dikirim ke email <strong class="text-slate-900">{{ $order->customer_email }}</strong> segera setelah status invoice dikonfirmasi lunas oleh panitia.
+                            <p class="font-bold text-slate-800 mb-0.5">Petunjuk Dokumen Lintasan:</p>
+                            E-Ticket resmi beserta data alokasi nomor dada dada lintasan (BIB) telah otomatis dikirimkan ke email utama Anda di <strong class="text-slate-900">{{ $order->customer_email }}</strong>. Silakan bawa cetak/unduhan tiket saat penukaran kit perlombaan.
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                        <a href="{{ route('home') }}" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-xl transition shadow-md flex justify-center items-center gap-2 text-xs">
-                            <i class="fa-solid fa-house"></i> Kembali ke Beranda
+                        <a href="{{ route('home') }}" class="w-full">
+                            <x-primary-button class="w-full !py-3 !rounded-xl justify-center gap-2 text-xs font-bold !bg-slate-900 hover:!bg-slate-800 active:!bg-slate-950 focus:!ring-slate-500">
+                                <i class="fa-solid fa-house"></i> Kembali ke Beranda
+                            </x-primary-button>
                         </a>
-                        <button onclick="window.print()" class="w-full bg-white hover:bg-slate-50 text-slate-700 font-bold py-3 px-4 rounded-xl transition border border-slate-200 shadow-sm flex justify-center items-center gap-2 text-xs">
-                            <i class="fa-solid fa-print"></i> Cetak Bukti Pendaftaran
-                        </button>
+                        
+                        <a href="{{ route('front.checkout.invoice.download', $order->invoice_number) }}" target="_blank" class="w-full">
+                            <x-secondary-button class="w-full !py-3 !rounded-xl justify-center gap-2 text-xs font-bold text-slate-700 shadow-sm transition">
+                                <i class="fa-solid fa-file-pdf text-red-500"></i> Unduh Invoice PDF
+                            </x-secondary-button>
+                        </a>
                     </div>
 
                 </div>

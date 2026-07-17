@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Carbon\Carbon;
 use Exception;
+use Barryvdh\DomPDF\Facade\Pdf; 
 
 class CheckoutController extends Controller
 {
@@ -73,8 +74,7 @@ class CheckoutController extends Controller
         try {
             $order = $this->orderService->completeOrder($invoice, $request->validated());
             
-            return redirect()->route('front.checkout.success', $order->invoice_number)
-                ->with('success', 'Pesanan Anda berhasil dibuat!');
+            return redirect()->route('front.checkout.payment', $order->invoice_number);
 
         } catch (Exception $e) {
             return redirect()->back()
@@ -83,12 +83,37 @@ class CheckoutController extends Controller
         }
     }
 
-    public function showSuccessPage(string $invoice_number): View
+    public function showSuccessPage(string $invoice_number): View|RedirectResponse
     {
         $order = Order::with('items.ticketTier.raceCategory')
             ->where('invoice_number', $invoice_number)
             ->firstOrFail();
 
+        if ($order->payment_status !== 'settlement') {
+            return redirect()->route('front.checkout.payment', $order->invoice_number)
+                ->with('error', 'Silakan selesaikan pembayaran terlebih dahulu.');
+        }
+
         return view('front.checkout.success', compact('order'));
+    }
+
+    public function downloadInvoice(string $invoice_number)
+    {
+        $order = Order::with([
+            'items.ticketTier.raceCategory.event', 
+            'items.participants'
+        ])->where('invoice_number', $invoice_number)->firstOrFail();
+
+        if ($order->payment_status !== 'settlement') {
+            return redirect()->route('front.checkout.payment', $order->invoice_number)
+                ->with('error', 'Selesaikan pembayaran terlebih dahulu sebelum mengunduh invoice resmi.');
+        }
+
+        $event = $order->items->first()?->ticketTier?->raceCategory?->event;
+
+        $pdf = Pdf::loadView('front.checkout.invoice-pdf', compact('order', 'event'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->stream('Invoice-' . $order->invoice_number . '.pdf');
     }
 }

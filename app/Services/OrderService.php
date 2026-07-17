@@ -26,10 +26,6 @@ class OrderService
 
                 $tier = TicketTier::lockForUpdate()->findOrFail($tierId);
 
-                if ($tierId == 1) {
-                    sleep(10); 
-                }
-
                 if ($tier->slot_limit < $quantity) {
                     throw new Exception("Maaf, kuota kuota tiket untuk {$tier->tier_name} tidak mencukupi.");
                 }
@@ -104,17 +100,30 @@ class OrderService
 
     public function releaseExpiredOrders(): void
     {
-        $expiredOrders = Order::with('items.ticketTier')
+        $abandonedForms = Order::with('items.ticketTier')
             ->where('payment_status', 'pending')
             ->where('created_at', '<', Carbon::now()->subMinutes(10))
             ->whereDoesntHave('items.participants')
             ->get();
 
-        foreach ($expiredOrders as $order) {
+        foreach ($abandonedForms as $order) {
             foreach ($order->items as $item) {
                 $item->ticketTier()->increment('slot_limit', $item->quantity);
             }
             $order->delete();
+        }
+
+        $expiredPayments = Order::with('items.ticketTier')
+            ->where('payment_status', 'pending')
+            ->where('updated_at', '<', Carbon::now()->subMinutes(7))
+            ->whereHas('items.participants')
+            ->get();
+
+        foreach ($expiredPayments as $order) {
+            foreach ($order->items as $item) {
+                $item->ticketTier()->increment('slot_limit', $item->quantity);
+            }
+            $order->update(['payment_status' => 'expire']); 
         }
     }
 }
