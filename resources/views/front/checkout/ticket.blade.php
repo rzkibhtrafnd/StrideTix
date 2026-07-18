@@ -9,10 +9,9 @@
             init() {
                 @foreach($event->raceCategories as $category)
                     @foreach($category->ticketTiers as $tier)
-                        @if($tier->status_label === 'tersedia')
-                            this.selectedTickets[{{ $tier->id }}] = 0;
-                            this.prices[{{ $tier->id }}] = {{ $tier->price }};
-                        @endif
+                        // Inisialisasi semua tier agar object state tidak bernilai undefined saat render input
+                        this.selectedTickets[{{ $tier->id }}] = 0;
+                        this.prices[{{ $tier->id }}] = {{ $tier->price }};
                     @endforeach
                 @endforeach
             },
@@ -35,7 +34,6 @@
         
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             
-            <!-- Progress Bar Tahap 1 -->
             <div class="flex items-center justify-center gap-4 mb-8 text-sm font-bold text-slate-400">
                 <span class="text-blue-600 flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-full">
                     <span class="w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs">1</span> Pilih Tiket
@@ -49,6 +47,14 @@
                     <span class="w-5 h-5 bg-slate-300 text-slate-600 rounded-full flex items-center justify-center text-xs">3</span> Pembayaran
                 </span>
             </div>
+
+            <!-- Menampilkan Flash Error Jika Input Kosong dari Validasi Controller -->
+            @if(session('error'))
+                <div class="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 text-sm font-bold rounded-xl flex items-center gap-2 shadow-xs">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    {{ session('error') }}
+                </div>
+            @endif
 
             <form method="POST" action="{{ route('front.checkout.form', $event->id) }}">
                 @csrf
@@ -82,10 +88,12 @@
                                                                     @click="if(selectedTickets[{{ $tier->id }}] > 0) selectedTickets[{{ $tier->id }}]--" 
                                                                     class="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 font-bold text-slate-600 border-r border-slate-200 text-sm transition">-</button>
                                                             
+                                                            <!-- PENTING: Hilangkan readonly agar sinkronisasi value binding x-model berjalan sempurna -->
                                                             <input type="number" 
                                                                 name="tickets[{{ $tier->id }}]" 
                                                                 x-model.number="selectedTickets[{{ $tier->id }}]"
-                                                                readonly
+                                                                min="0"
+                                                                max="{{ min(5, $tier->slot_limit) }}"
                                                                 class="w-12 text-center border-none focus:ring-0 text-sm font-bold text-slate-800 p-1"
                                                             >
                                                             

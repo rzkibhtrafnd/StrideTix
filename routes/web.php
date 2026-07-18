@@ -16,12 +16,8 @@ Route::get('/event/{id}', [FrontEventController::class, 'show'])->name('front.ev
 Route::get('/event/{id}/ticket', [CheckoutController::class, 'showTicketPage'])->name('front.checkout.ticket');
 Route::post('/event/{id}/checkout-form', [CheckoutController::class, 'showCustomerForm'])->name('front.checkout.form');
 Route::get('/event/{id}/checkout-form/{invoice}', [CheckoutController::class, 'renderCustomerForm'])->name('front.checkout.form.get');
-
-// Alur Proses Akhir Form -> Menuju Rute Pembayaran
 Route::post('/checkout/process/{invoice}', [CheckoutController::class, 'store'])->name('front.checkout.store');
 Route::get('/checkout/payment/{invoice}', [PaymentController::class, 'show'])->name('front.checkout.payment');
-
-// Webhook Otomatis Midtrans & Halaman Sukses
 Route::post('/midtrans/notification', [PaymentController::class, 'notification'])->name('midtrans.notification');
 Route::get('/checkout/success/{invoice_number}', [CheckoutController::class, 'showSuccessPage'])->name('front.checkout.success');
 Route::get('/checkout/invoice/{invoice_number}/download', [CheckoutController::class, 'downloadInvoice'])->name('front.checkout.invoice.download');

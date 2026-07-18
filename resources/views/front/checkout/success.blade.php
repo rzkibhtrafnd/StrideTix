@@ -57,6 +57,30 @@
                         </div>
                     </div>
 
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Daftar Pelari Terdaftar</h4>
+                        <div class="space-y-2">
+                            @foreach($order->items as $item)
+                                @foreach($item->participants as $participant)
+                                    <div class="p-3 bg-white border border-slate-100 rounded-xl flex items-center justify-between text-xs">
+                                        <div>
+                                            <p class="font-bold text-slate-800">{{ $participant->full_name }}</p>
+                                            <p class="text-[10px] text-slate-400 mt-0.5">BIB Kategori: {{ $item->ticketTier->raceCategory->category_name }}</p>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="px-2 py-0.5 text-[10px] rounded-sm font-bold uppercase {{ $participant->gender->badgeClass() }}">
+                                                {{ $participant->gender->label() }}
+                                            </span>
+                                            <span class="px-2 py-0.5 text-[10px] rounded-sm font-bold uppercase {{ $participant->identity_type->badgeClass() }}">
+                                                {{ $participant->identity_type->label() }}: {{ $participant->identity_number }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @endforeach
+                        </div>
+                    </div>
+
                     <div class="p-4 bg-blue-50/50 border border-blue-100 rounded-2xl flex gap-3 items-start">
                         <i class="fa-solid fa-circle-info text-blue-500 mt-0.5 text-sm"></i>
                         <div class="text-xs text-slate-600 leading-relaxed">

@@ -16,8 +16,6 @@ class OrderService
     public function reserveTickets(array $requestedTickets): Order
     {
         return DB::transaction(function () use ($requestedTickets) {
-            $this->releaseExpiredOrders();
-
             $totalOriginalPrice = 0;
             $itemsToCreate = [];
 
@@ -27,7 +25,7 @@ class OrderService
                 $tier = TicketTier::lockForUpdate()->findOrFail($tierId);
 
                 if ($tier->slot_limit < $quantity) {
-                    throw new Exception("Maaf, kuota kuota tiket untuk {$tier->tier_name} tidak mencukupi.");
+                    throw new Exception("Maaf, kuota tiket untuk {$tier->tier_name} tidak mencukupi.");
                 }
 
                 $tier->decrement('slot_limit', $quantity);
@@ -63,13 +61,18 @@ class OrderService
     public function completeOrder(string $invoiceNumber, array $data): Order
     {
         return DB::transaction(function () use ($invoiceNumber, $data) {
-            $order = Order::where('invoice_number', $invoiceNumber)
+            $order = Order::with('items.ticketTier')
+                ->where('invoice_number', $invoiceNumber)
                 ->where('payment_status', 'pending')
                 ->whereDoesntHave('items.participants')
                 ->first();
 
+            // [PERBAIKAN 2]: Hanya kembalikan stok untuk 1 order ini saja jika kedaluwarsa, 
+            // bukan menjalankan full table scan.
             if (!$order || Carbon::parse($order->created_at)->addMinutes(10)->isPast()) {
-                $this->releaseExpiredOrders();
+                if ($order) {
+                    $this->releaseSingleOrder($order, true);
+                }
                 throw new Exception("Waktu pengisian formulir Anda telah habis (Batas 10 menit). Silakan pilih tiket kembali.");
             }
 
@@ -98,32 +101,99 @@ class OrderService
         });
     }
 
+    public function checkAndProcessExpiredOrder(Order $order): void
+    {
+        if ($order->payment_status === 'pending' && Carbon::parse($order->updated_at)->addMinutes(7)->isPast()) {
+            DB::transaction(function () use ($order) {
+                foreach ($order->items as $item) {
+                    $item->ticketTier()->increment('slot_limit', $item->quantity);
+                }
+                $order->update(['payment_status' => 'expire']);
+            });
+        }
+    }
+
+    // [PERBAIKAN 3]: Membungkus logic mass release dalam DB::transaction
     public function releaseExpiredOrders(): void
     {
-        $abandonedForms = Order::with('items.ticketTier')
-            ->where('payment_status', 'pending')
-            ->where('created_at', '<', Carbon::now()->subMinutes(10))
-            ->whereDoesntHave('items.participants')
-            ->get();
+        DB::transaction(function () {
+            $abandonedForms = Order::with('items.ticketTier')
+                ->where('payment_status', 'pending')
+                ->where('created_at', '<', Carbon::now()->subMinutes(10))
+                ->whereDoesntHave('items.participants')
+                ->lockForUpdate()
+                ->get();
 
-        foreach ($abandonedForms as $order) {
-            foreach ($order->items as $item) {
-                $item->ticketTier()->increment('slot_limit', $item->quantity);
+            foreach ($abandonedForms as $order) {
+                $this->releaseSingleOrder($order, true);
             }
+
+            $expiredPayments = Order::with('items.ticketTier')
+                ->where('payment_status', 'pending')
+                ->where('updated_at', '<', Carbon::now()->subMinutes(7))
+                ->whereHas('items.participants')
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($expiredPayments as $order) {
+                $this->releaseSingleOrder($order, false);
+            }
+        });
+    }
+
+    private function releaseSingleOrder(Order $order, bool $isDelete): void
+    {
+        foreach ($order->items as $item) {
+            $item->ticketTier()->increment('slot_limit', $item->quantity);
+        }
+        
+        if ($isDelete) {
             $order->delete();
+        } else {
+            $order->update(['payment_status' => 'expire']);
+        }
+    }
+
+    public function processMidtransNotification(array $payload): void
+    {
+        $orderId = $payload['order_id'] ?? null;
+        $transactionStatus = $payload['transaction_status'] ?? null;
+        $paymentType = $payload['payment_type'] ?? null;
+
+        $order = Order::where('invoice_number', $orderId)->first();
+
+        if (!$order) {
+            abort(404, 'Order tidak ditemukan');
         }
 
-        $expiredPayments = Order::with('items.ticketTier')
-            ->where('payment_status', 'pending')
-            ->where('updated_at', '<', Carbon::now()->subMinutes(7))
-            ->whereHas('items.participants')
-            ->get();
+        $vaNumber = null;
+        $bankChannel = null;
 
-        foreach ($expiredPayments as $order) {
-            foreach ($order->items as $item) {
-                $item->ticketTier()->increment('slot_limit', $item->quantity);
-            }
-            $order->update(['payment_status' => 'expire']); 
+        if ($paymentType === 'bank_transfer' && !empty($payload['va_numbers'])) {
+            $vaNumber = $payload['va_numbers'][0]['va_number'] ?? null;
+            $bankChannel = $payload['va_numbers'][0]['bank'] ?? null;
+        } elseif ($paymentType === 'permata_va') {
+            $vaNumber = $payload['permata_va_number'] ?? null;
+            $bankChannel = 'permata';
         }
+
+        $paymentStatus = $order->payment_status;
+        $paidAt = $order->paid_at;
+
+        if (in_array($transactionStatus, ['settlement', 'capture'])) {
+            $paymentStatus = 'settlement';
+            $paidAt = Carbon::now();
+        } elseif (in_array($transactionStatus, ['deny', 'expire', 'cancel'])) {
+            $paymentStatus = 'expire';
+        }
+
+        $order->update([
+            'payment_status' => $paymentStatus,
+            'payment_method' => $paymentType,
+            'midtrans_transaction_id' => $payload['transaction_id'] ?? null,
+            'va_number' => $vaNumber,
+            'payment_provider_channel' => $bankChannel,
+            'paid_at' => $paidAt,
+        ]);
     }
 }

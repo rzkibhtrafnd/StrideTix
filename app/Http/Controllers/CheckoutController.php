@@ -7,42 +7,76 @@ use App\Http\Requests\CheckoutRequest;
 use App\Models\Event;
 use App\Models\Order;
 use App\Services\OrderService;
+use App\Services\FrontEventService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\View\View;
 use Carbon\Carbon;
 use Exception;
-use Barryvdh\DomPDF\Facade\Pdf; 
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class CheckoutController extends Controller
 {
     public function __construct(
-        protected OrderService $orderService
+        protected OrderService $orderService,
+        protected FrontEventService $frontEventService
     ) {}
 
     public function showTicketPage(int $id): View
     {
-        $this->orderService->releaseExpiredOrders();
-
-        $event = Event::with('raceCategories.ticketTiers')->findOrFail($id);
+        $event = $this->frontEventService->getEventDetails($id);
         return view('front.checkout.ticket', compact('event'));
     }
 
-    public function showCustomerForm(Request $request, int $id): RedirectResponse
+    public function showCustomerForm(Request $request, int $id): JsonResponse|RedirectResponse
     {
+        $throttleKey = 'booking_event_' . $id . '_' . session()->getId();
+        
+        if (RateLimiter::tooManyAttempts($throttleKey, 1)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            $msg = "Antrean sedang penuh atau Anda menekan tombol terlalu cepat. Coba lagi dalam {$seconds} detik.";
+            
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $msg], 429);
+            }
+            return redirect()->back()->with('error', $msg);
+        }
+
+        RateLimiter::hit($throttleKey, 10);
+
         $tickets = $request->input('tickets', []);
-        $selectedTickets = array_filter($tickets, fn($q) => $q > 0);
+        $selectedTickets = array_filter($tickets, fn($q) => (int)$q > 0);
 
         if (empty($selectedTickets)) {
-            return redirect()->route('front.checkout.ticket', $id)
-                ->with('error', 'Silakan tentukan minimal 1 kuantitas tiket untuk melanjutkan.');
+            RateLimiter::clear($throttleKey);
+            $msg = 'Silakan tentukan minimal 1 kuantitas tiket untuk melanjutkan.';
+            
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $msg], 422);
+            }
+            return redirect()->route('front.checkout.ticket', $id)->with('error', $msg);
         }
 
         try {
             $order = $this->orderService->reserveTickets($tickets);
+            RateLimiter::clear($throttleKey);
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Tiket berhasil diamankan.',
+                    'redirect_url' => route('front.checkout.form.get', ['id' => $id, 'invoice' => $order->invoice_number])
+                ], 200);
+            }
 
             return redirect()->route('front.checkout.form.get', ['id' => $id, 'invoice' => $order->invoice_number]);
 
         } catch (Exception $e) {
+            RateLimiter::clear($throttleKey);
+            
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $e->getMessage()], 422);
+            }
             return redirect()->back()->with('error', $e->getMessage());
         }
     }

@@ -17,7 +17,6 @@
                 </div>
             @endif
 
-            <!-- Progress Bar Tahap 2 -->
             <div class="flex items-center justify-center gap-4 mb-8 text-sm font-bold text-slate-400">
                 <span class="text-emerald-600 flex items-center gap-1.5"><i class="fa-solid fa-circle-check"></i> Pilih Tiket</span>
                 <i class="fa-solid fa-chevron-right text-xs"></i>
@@ -108,8 +107,8 @@
                                         <div>
                                             <x-input-label value="Jenis Kelamin" />
                                             <select name="participants[{{ $pIndex }}][gender]" class="w-full mt-1.5 rounded-lg text-sm border-slate-300 shadow-2xs focus:ring-blue-500 focus:border-blue-500" required>
-                                                <option value="M" {{ old("participants.$pIndex.gender") == 'M' ? 'selected' : '' }}>Laki-laki</option>
-                                                <option value="F" {{ old("participants.$pIndex.gender") == 'F' ? 'selected' : '' }}>Perempuan</option>
+                                                <option value="{{ \App\Enums\Gender::MALE->value }}" {{ old("participants.$pIndex.gender") == \App\Enums\Gender::MALE->value ? 'selected' : '' }}>Laki-laki</option>
+                                                <option value="{{ \App\Enums\Gender::FEMALE->value }}" {{ old("participants.$pIndex.gender") == \App\Enums\Gender::FEMALE->value ? 'selected' : '' }}>Perempuan</option>
                                             </select>
                                         </div>
                                         <div>
@@ -122,8 +121,8 @@
                                         <div>
                                             <x-input-label value="Jenis Identitas" />
                                             <select name="participants[{{ $pIndex }}][identity_type]" class="w-full mt-1.5 rounded-lg text-sm border-slate-300 focus:ring-blue-500 focus:border-blue-500" required>
-                                                <option value="KTP" {{ old("participants.$pIndex.identity_type") == 'KTP' ? 'selected' : '' }}>KTP</option>
-                                                <option value="PASPOR" {{ old("participants.$pIndex.identity_type") == 'PASPOR' ? 'selected' : '' }}>PASPOR</option>
+                                                <option value="{{ \App\Enums\IdentityType::KTP->value }}" {{ old("participants.$pIndex.identity_type") == \App\Enums\IdentityType::KTP->value ? 'selected' : '' }}>KTP</option>
+                                                <option value="{{ \App\Enums\IdentityType::PASPOR->value }}" {{ old("participants.$pIndex.identity_type") == \App\Enums\IdentityType::PASPOR->value ? 'selected' : '' }}>PASPOR</option>
                                             </select>
                                         </div>
                                         <div>

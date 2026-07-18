@@ -20,9 +20,9 @@ class CheckoutRequest extends FormRequest
             
             'participants' => ['required', 'array'],
             'participants.*.full_name' => ['required', 'string', 'max:255'],
-            'participants.*.gender' => ['required', 'in:M,F'],
+            'participants.*.gender' => ['required', 'integer', 'in:1,2'],
             'participants.*.date_of_birth' => ['required', 'date'],
-            'participants.*.identity_type' => ['required', 'in:KTP,PASPOR'],
+            'participants.*.identity_type' => ['required', 'integer', 'in:1,2'],
             'participants.*.identity_number' => ['required', 'string', 'max:50'],
             'participants.*.blood_type' => ['required', 'in:A,B,AB,O'],
             'participants.*.jersey_size' => ['required', 'in:XS,S,M,L,XL,XXL'],
@@ -38,6 +38,8 @@ class CheckoutRequest extends FormRequest
             'participants.*.full_name.required' => 'Nama lengkap pelari wajib diisi.',
             'participants.*.identity_number.required' => 'Nomor identitas pelari wajib diisi.',
             'participants.*.emergency_contact_phone.required' => 'Nomor kontak darurat pelari wajib diisi.',
+            'participants.*.gender.in' => 'Pilihan jenis kelamin tidak valid.',
+            'participants.*.identity_type.in' => 'Pilihan jenis identitas tidak valid.',
         ];
     }
 }
