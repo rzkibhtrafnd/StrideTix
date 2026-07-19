@@ -6,20 +6,27 @@ use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\Organizer;
 use App\Services\EventService;
+use App\Services\IndonesianRegionService;
 use App\Http\Requests\EventRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Illuminate\Http\Request;
 
 class EventController extends Controller
 {
     public function __construct(
-        protected EventService $eventService
+        protected EventService $eventService,
+        protected IndonesianRegionService $regionService
     ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $events = $this->eventService->getAllEvents();
-        return view('admin.events.index', compact('events'));
+        $filters = $request->only(['search', 'province_id', 'regency_id']);
+        $events = $this->eventService->getAllEvents($filters);
+        
+        $provinces = $this->regionService->fetchProvinces();
+
+        return view('admin.events.index', compact('events', 'provinces', 'filters'));
     }
 
     public function create(): View

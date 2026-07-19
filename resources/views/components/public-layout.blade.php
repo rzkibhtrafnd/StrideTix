@@ -23,11 +23,18 @@
                 </a>
 
                 <nav class="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-600">
-                    <a href="{{ url('/') }}" class="hover:text-blue-600 transition-colors {{ request()->is('/') ? 'text-blue-600' : '' }}">Beranda</a>
-                    <a href="#" class="hover:text-blue-600 transition-colors">Jelajah</a>
-                    <a href="#" class="hover:text-blue-600 transition-colors">Tentang Kami</a>
-                    <a href="#" class="hover:text-blue-600 transition-colors">Syarat & Ketentuan</a>
-                    <a href="#" class="hover:text-blue-600 transition-colors">Kontak</a>
+                    <a href="{{ url('/') }}" class="transition-colors {{ request()->is('/') ? 'text-blue-600' : 'hover:text-blue-600' }}">
+                        Beranda
+                    </a>
+                    <a href="{{ route('front.event.explore') }}" class="transition-colors {{ request()->routeIs('front.event.explore') ? 'text-blue-600' : 'hover:text-blue-600' }}">
+                        Jelajah
+                    </a>
+                    <a href="{{ route('front.about') }}" class="transition-colors {{ request()->routeIs('front.about') ? 'text-blue-600' : 'hover:text-blue-600' }}">
+                        Tentang Kami
+                    </a>
+                    <a href="{{ route('front.contact') }}" class="transition-colors {{ request()->routeIs('front.contact') ? 'text-blue-600' : 'hover:text-blue-600' }}">
+                        Kontak
+                    </a>
                 </nav>
 
                 <div class="flex items-center gap-2 shrink-0">
@@ -99,9 +106,8 @@
                 <span class="font-black text-blue-600 tracking-wider">STRIDETIX</span> &copy; {{ date('Y') }}. Hak Cipta Dilindungi.
             </div>
             <div class="flex gap-6 font-medium">
-                <a href="#" class="hover:text-blue-600 transition">Tentang Kami</a>
-                <a href="#" class="hover:text-blue-600 transition">Syarat & Ketentuan</a>
-                <a href="#" class="hover:text-blue-600 transition">Kontak</a>
+                <a href="{{ route('front.about') }}" class="hover:text-blue-600 transition">Tentang Kami</a>
+                <a href="{{ route('front.contact') }}" class="hover:text-blue-600 transition">Kontak</a>
             </div>
         </div>
     </footer>

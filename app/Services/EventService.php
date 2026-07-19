@@ -7,9 +7,12 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class EventService
 {
-    public function getAllEvents(int $perPage = 10): LengthAwarePaginator
+    public function getAllEvents(array $filters = [], int $perPage = 10): LengthAwarePaginator
     {
-        return Event::with('organizer')->latest()->paginate($perPage);
+        return Event::with('organizer')
+            ->filter($filters)
+            ->latest()
+            ->paginate($perPage);
     }
 
     public function createEvent(array $data): Event

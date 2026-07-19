@@ -12,15 +12,15 @@
                 Dari 5K Fun Run hingga Full Marathon. Beli tiket dengan aman, dapatkan e-BIB secara instan, dan bersiaplah memecahkan rekor personal Anda!
             </p>
             
-            <div class="max-w-3xl mx-auto bg-white p-2 rounded-full shadow-xl flex items-center">
+            <form action="{{ route('front.event.explore') }}" method="GET" class="max-w-3xl mx-auto bg-white p-2 rounded-full shadow-xl flex items-center">
                 <div class="flex-grow flex items-center px-4">
                     <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
-                    <input type="text" placeholder="Cari nama event lari..." class="w-full border-none focus:ring-0 text-sm font-medium text-slate-700 bg-transparent placeholder-slate-400">
+                    <input type="text" name="search" placeholder="Cari nama atau kota event lari..." class="w-full border-none focus:ring-0 text-sm font-medium text-slate-700 bg-transparent placeholder-slate-400">
                 </div>
-                <button class="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 py-3 text-sm font-bold transition">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 py-3 text-sm font-bold transition">
                     Cari Event
                 </button>
-            </div>
+            </form>
         </div>
     </section>
 
@@ -31,14 +31,14 @@
                     <h2 class="text-2xl font-black text-slate-900">Event Mendatang</h2>
                     <p class="text-slate-500 text-sm mt-1">Pendaftaran sedang dibuka, amankan slot Anda!</p>
                 </div>
-                <a href="#" class="hidden md:inline-block text-sm font-bold text-blue-600 hover:text-blue-700">Lihat Semua <i class="fa-solid fa-arrow-right ml-1 text-xs"></i></a>
+                <a href="{{ route('front.event.explore') }}" class="hidden md:inline-block text-sm font-bold text-blue-600 hover:text-blue-700">
+                    Lihat Semua <i class="fa-solid fa-arrow-right ml-1 text-xs"></i>
+                </a>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 @forelse($events as $event)
-
                     <a href="{{ route('front.event.show', $event->id) }}" class="group flex flex-col bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden h-full">
-                        
                         <div class="relative aspect-[4/3] bg-gradient-to-tr from-slate-200 to-slate-100 overflow-hidden">
                             <div class="absolute inset-0 flex items-center justify-center opacity-20">
                                 <i class="fa-solid fa-person-running text-7xl text-slate-400"></i>
@@ -81,6 +81,7 @@
                         </div>
                     </a>
                 @empty
+                    <div class="col-span-full text-center py-12 text-slate-400">Belum ada event saat ini.</div>
                 @endforelse
             </div>
         </div>

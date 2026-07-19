@@ -9,6 +9,7 @@ use App\Services\RaceCategoryService;
 use App\Http\Requests\RaceCategoryRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Illuminate\Http\Request;
 use App\Enums\EventStatus;
 
 class RaceCategoryController extends Controller
@@ -17,10 +18,15 @@ class RaceCategoryController extends Controller
         protected RaceCategoryService $categoryService
     ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $categories = $this->categoryService->getAllCategories();
-        return view('admin.race_categories.index', compact('categories'));
+        $filters = $request->only(['search', 'event_id']);
+        
+        $categories = $this->categoryService->getAllCategories($filters);
+        
+        $events = Event::latest()->get();
+
+        return view('admin.race_categories.index', compact('categories', 'events', 'filters'));
     }
 
     public function create(): View

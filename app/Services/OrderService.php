@@ -67,8 +67,6 @@ class OrderService
                 ->whereDoesntHave('items.participants')
                 ->first();
 
-            // [PERBAIKAN 2]: Hanya kembalikan stok untuk 1 order ini saja jika kedaluwarsa, 
-            // bukan menjalankan full table scan.
             if (!$order || Carbon::parse($order->created_at)->addMinutes(10)->isPast()) {
                 if ($order) {
                     $this->releaseSingleOrder($order, true);
@@ -105,39 +103,25 @@ class OrderService
     {
         if ($order->payment_status === 'pending' && Carbon::parse($order->updated_at)->addMinutes(7)->isPast()) {
             DB::transaction(function () use ($order) {
-                foreach ($order->items as $item) {
-                    $item->ticketTier()->increment('slot_limit', $item->quantity);
-                }
-                $order->update(['payment_status' => 'expire']);
+                $this->releaseSingleOrder($order, false);
             });
         }
     }
 
-    // [PERBAIKAN 3]: Membungkus logic mass release dalam DB::transaction
     public function releaseExpiredOrders(): void
     {
         DB::transaction(function () {
-            $abandonedForms = Order::with('items.ticketTier')
-                ->where('payment_status', 'pending')
-                ->where('created_at', '<', Carbon::now()->subMinutes(10))
-                ->whereDoesntHave('items.participants')
+            Order::with('items.ticketTier')
+                ->formAbandoned()
                 ->lockForUpdate()
-                ->get();
+                ->get()
+                ->each(fn($order) => $this->releaseSingleOrder($order, true));
 
-            foreach ($abandonedForms as $order) {
-                $this->releaseSingleOrder($order, true);
-            }
-
-            $expiredPayments = Order::with('items.ticketTier')
-                ->where('payment_status', 'pending')
-                ->where('updated_at', '<', Carbon::now()->subMinutes(7))
-                ->whereHas('items.participants')
+            Order::with('items.ticketTier')
+                ->paymentExpired()
                 ->lockForUpdate()
-                ->get();
-
-            foreach ($expiredPayments as $order) {
-                $this->releaseSingleOrder($order, false);
-            }
+                ->get()
+                ->each(fn($order) => $this->releaseSingleOrder($order, false));
         });
     }
 
@@ -160,11 +144,9 @@ class OrderService
         $transactionStatus = $payload['transaction_status'] ?? null;
         $paymentType = $payload['payment_type'] ?? null;
 
-        $order = Order::where('invoice_number', $orderId)->first();
-
-        if (!$order) {
-            abort(404, 'Order tidak ditemukan');
-        }
+        $order = Order::with('items.ticketTier')
+            ->where('invoice_number', $orderId)
+            ->firstOrFail();
 
         $vaNumber = null;
         $bankChannel = null;
@@ -185,6 +167,7 @@ class OrderService
             $paidAt = Carbon::now();
         } elseif (in_array($transactionStatus, ['deny', 'expire', 'cancel'])) {
             $paymentStatus = 'expire';
+            $this->releaseSingleOrder($order, false);
         }
 
         $order->update([

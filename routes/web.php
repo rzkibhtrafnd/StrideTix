@@ -7,11 +7,17 @@ use App\Http\Controllers\Admin\OrganizerController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\RaceCategoryController;
 use App\Http\Controllers\Admin\TicketTierController;
+use App\Http\Controllers\Admin\TransactionHistoryController as AdminTransactionHistoryController;
+use App\Http\Controllers\Organizer\TransactionHistoryController as OrganizerTransactionHistoryController;
 use App\Http\Controllers\FrontEventController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\RegionalController;
 
 Route::get('/', [FrontEventController::class, 'index'])->name('home');
+Route::get('/jelajah', [FrontEventController::class, 'explore'])->name('front.event.explore');
+Route::view('/tentang-kami', 'front.about')->name('front.about');
+Route::view('/kontak', 'front.contact')->name('front.contact');
 Route::get('/event/{id}', [FrontEventController::class, 'show'])->name('front.event.show');
 Route::get('/event/{id}/ticket', [CheckoutController::class, 'showTicketPage'])->name('front.checkout.ticket');
 Route::post('/event/{id}/checkout-form', [CheckoutController::class, 'showCustomerForm'])->name('front.checkout.form');
@@ -25,6 +31,8 @@ Route::get('/checkout/invoice/{invoice_number}/download', [CheckoutController::c
 Route::middleware(['auth', 'verified'])->group(function () {
     
     Route::prefix('admin')->name('admin.')->group(function () {
+        Route::get('/region/provinces', [RegionalController::class, 'getProvinces'])->name('region.provinces');
+        Route::get('/region/regencies', [RegionalController::class, 'getRegencies'])->name('region.regencies');
         Route::get('/dashboard', function () {
             return view('admin.dashboard');
         })->name('dashboard');
@@ -33,12 +41,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('events', EventController::class);
         Route::resource('race-categories', RaceCategoryController::class);
         Route::resource('ticket-tiers', TicketTierController::class);
+        Route::get('/transactions', [AdminTransactionHistoryController::class, 'index'])->name('transactions.index');
+        Route::get('/transactions/{order:invoice_number}', [AdminTransactionHistoryController::class, 'show'])->name('transactions.show');
     });
 
     Route::prefix('organizer')->name('organizer.')->group(function () {
         Route::get('/dashboard', function () {
             return view('organizer.dashboard');
         })->name('dashboard');
+        Route::get('/transactions', [OrganizerTransactionHistoryController::class, 'index'])->name('transactions.index');
+        Route::get('/transactions/{order:invoice_number}', [OrganizerTransactionHistoryController::class, 'show'])->name('transactions.show');
     });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

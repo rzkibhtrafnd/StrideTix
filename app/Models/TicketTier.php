@@ -53,4 +53,21 @@ class TicketTier extends Model
     {
         return $this->belongsTo(RaceCategory::class, 'race_category_id');
     }
+
+    public function scopeFilter($query, array $filters)
+    {
+        return $query->when($filters['search'] ?? null, function ($q, $search) {
+            $q->where(function ($subQuery) use ($search) {
+                $subQuery->where('tier_name', 'like', '%' . $search . '%')
+                        ->orWhereHas('raceCategory', function ($catQuery) use ($search) {
+                            $catQuery->where('category_name', 'like', '%' . $search . '%')
+                                    ->orWhereHas('event', function ($eventQuery) use ($search) {
+                                        $eventQuery->where('title', 'like', '%' . $search . '%');
+                                    });
+                        });
+            });
+        })->when($filters['race_category_id'] ?? null, function ($q, $categoryId) {
+            $q->where('race_category_id', $categoryId);
+        });
+    }
 }

@@ -9,6 +9,7 @@ use App\Services\TicketTierService;
 use App\Http\Requests\TicketTierRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Illuminate\Http\Request;
 
 class TicketTierController extends Controller
 {
@@ -16,10 +17,15 @@ class TicketTierController extends Controller
         protected TicketTierService $tierService
     ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $tiers = $this->tierService->getAllTiers();
-        return view('admin.ticket_tiers.index', compact('tiers'));
+        $filters = $request->only(['search', 'race_category_id']);
+        
+        $tiers = $this->tierService->getAllTiers($filters);
+        
+        $categories = RaceCategory::with('event')->latest()->get();
+
+        return view('admin.ticket_tiers.index', compact('tiers', 'categories', 'filters'));
     }
 
     public function create(): View

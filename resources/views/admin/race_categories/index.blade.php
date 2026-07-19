@@ -25,6 +25,36 @@
                 </a>
             </div>
         </div>
+
+        <div class="mt-6 p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col md:flex-row gap-4 justify-between items-center">
+            <form method="GET" action="{{ route('admin.race-categories.index') }}" class="w-full flex flex-col sm:flex-row gap-3 items-center">
+                
+                <div class="w-full sm:w-64">
+                    <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Cari Kategori / Event..." class="w-full rounded-lg text-sm border-slate-300 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div class="w-full sm:w-64">
+                    <select name="event_id" onchange="this.form.submit()" class="w-full rounded-lg text-sm border-slate-300 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Semua Kompetisi/Event</option>
+                        @foreach($events as $event)
+                            <option value="{{ $event->id }}" @selected(($filters['event_id'] ?? '') == $event->id)>
+                                {{ $event->title }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <x-primary-button type="submit" class="py-2">
+                    <i class="fa-solid fa-filter mr-1.5"></i>{{ __('Filter') }}
+                </x-primary-button>
+
+                @if(!empty($filters['search']) || !empty($filters['event_id']))
+                    <a href="{{ route('admin.race-categories.index') }}" class="text-xs text-red-600 font-bold flex items-center px-2 hover:underline whitespace-nowrap">
+                        <i class="fa-solid fa-rotate-left mr-1"></i>Reset Filter
+                    </a>
+                @endif
+            </form>
+        </div>
         
         <div class="mt-6 overflow-x-auto">
             <table class="min-w-full divide-y divide-slate-200">
@@ -74,7 +104,7 @@
         </div>
 
         <div class="mt-4">
-            {{ $categories->links() }}
+            {{ $categories->appends(request()->query())->links() }}
         </div>
     </div>
 </x-app-layout>

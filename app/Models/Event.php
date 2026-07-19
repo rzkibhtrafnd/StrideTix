@@ -2,6 +2,7 @@
 
 namespace App\Models;
 use App\Enums\EventStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,6 +14,10 @@ class Event extends Model
         'organizer_id',
         'title',
         'description',
+        'province_id',
+        'province_name',
+        'regency_id',
+        'regency_name',
         'location',
         'google_maps_url',
         'event_date',
@@ -52,5 +57,24 @@ class Event extends Model
                 return $minPrice;
             }
         );
+    }
+
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('status', EventStatus::PUBLISHED->value);
+    }
+
+    public function scopeFilter(Builder $query, array $filters): Builder
+    {
+        return $query->when($filters['search'] ?? null, function ($q, $search) {
+            $q->where(function ($subQuery) use ($search) {
+                $subQuery->where('title', 'like', '%' . $search . '%')
+                        ->orWhere('location', 'like', '%' . $search . '%');
+            });
+        })->when($filters['province_id'] ?? null, function ($q, $provinceId) {
+            $q->where('province_id', $provinceId);
+        })->when($filters['regency_id'] ?? null, function ($q, $regencyId) {
+            $q->where('regency_id', $regencyId);
+        });
     }
 }

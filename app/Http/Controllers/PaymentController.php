@@ -19,8 +19,6 @@ class PaymentController extends Controller
 
     public function show(string $invoice): View|RedirectResponse
     {
-        $this->orderService->releaseExpiredOrders();
-
         $order = Order::with('items.ticketTier.raceCategory')
             ->where('invoice_number', $invoice)
             ->firstOrFail();
@@ -39,11 +37,20 @@ class PaymentController extends Controller
 
     public function notification(MidtransNotificationRequest $request): JsonResponse
     {
-        $this->orderService->processMidtransNotification($request->all());
+        $payload = $request->all();
+
+        if (!$this->midtransService->isValidSignature($payload)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Signature Key tidak valid!'
+            ], 403);
+        }
+
+        $this->orderService->processMidtransNotification($payload);
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Midtrans Webhook berhasil diproses'
+            'message' => 'Midtrans Webhook berhasil diproses dengan aman'
         ]);
     }
 }

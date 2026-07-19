@@ -37,10 +37,9 @@ class CheckoutController extends Controller
             $seconds = RateLimiter::availableIn($throttleKey);
             $msg = "Antrean sedang penuh atau Anda menekan tombol terlalu cepat. Coba lagi dalam {$seconds} detik.";
             
-            if ($request->expectsJson()) {
-                return response()->json(['message' => $msg], 429);
-            }
-            return redirect()->back()->with('error', $msg);
+            return $request->expectsJson() 
+                ? response()->json(['message' => $msg], 429)
+                : redirect()->back()->with('error', $msg);
         }
 
         RateLimiter::hit($throttleKey, 10);
@@ -52,45 +51,39 @@ class CheckoutController extends Controller
             RateLimiter::clear($throttleKey);
             $msg = 'Silakan tentukan minimal 1 kuantitas tiket untuk melanjutkan.';
             
-            if ($request->expectsJson()) {
-                return response()->json(['message' => $msg], 422);
-            }
-            return redirect()->route('front.checkout.ticket', $id)->with('error', $msg);
+            return $request->expectsJson()
+                ? response()->json(['message' => $msg], 422)
+                : redirect()->route('front.checkout.ticket', $id)->with('error', $msg);
         }
 
         try {
             $order = $this->orderService->reserveTickets($tickets);
             RateLimiter::clear($throttleKey);
             
-            if ($request->expectsJson()) {
-                return response()->json([
+            return $request->expectsJson()
+                ? response()->json([
                     'message' => 'Tiket berhasil diamankan.',
                     'redirect_url' => route('front.checkout.form.get', ['id' => $id, 'invoice' => $order->invoice_number])
-                ], 200);
-            }
-
-            return redirect()->route('front.checkout.form.get', ['id' => $id, 'invoice' => $order->invoice_number]);
+                ], 200)
+                : redirect()->route('front.checkout.form.get', ['id' => $id, 'invoice' => $order->invoice_number]);
 
         } catch (Exception $e) {
             RateLimiter::clear($throttleKey);
             
-            if ($request->expectsJson()) {
-                return response()->json(['message' => $e->getMessage()], 422);
-            }
-            return redirect()->back()->with('error', $e->getMessage());
+            return $request->expectsJson()
+                ? response()->json(['message' => $e->getMessage()], 422)
+                : redirect()->back()->with('error', $e->getMessage());
         }
     }
 
-    public function renderCustomerForm(int $id, string $invoice)
+    public function renderCustomerForm(int $id, string $invoice): View|RedirectResponse
     {
-        $order = Order::with('items.ticketTier.raceCategory')
-            ->where('invoice_number', $invoice)
+        $order = Order::where('invoice_number', $invoice)
             ->where('payment_status', 'pending')
             ->whereDoesntHave('items.participants')
             ->first();
 
         if (!$order || Carbon::parse($order->created_at)->addMinutes(10)->isPast()) {
-            $this->orderService->releaseExpiredOrders();
             return redirect()->route('front.checkout.ticket', $id)
                 ->with('error', 'Sesi booking tiket Anda telah berakhir atau tidak valid. Silakan pilih kembali.');
         }
@@ -107,13 +100,9 @@ class CheckoutController extends Controller
     {
         try {
             $order = $this->orderService->completeOrder($invoice, $request->validated());
-            
             return redirect()->route('front.checkout.payment', $order->invoice_number);
-
         } catch (Exception $e) {
-            return redirect()->back()
-                ->with('error', $e->getMessage())
-                ->withInput();
+            return redirect()->back()->with('error', $e->getMessage())->withInput();
         }
     }
 
@@ -133,14 +122,13 @@ class CheckoutController extends Controller
 
     public function downloadInvoice(string $invoice_number)
     {
-        $order = Order::with([
-            'items.ticketTier.raceCategory.event', 
-            'items.participants'
-        ])->where('invoice_number', $invoice_number)->firstOrFail();
+        $order = Order::with(['items.ticketTier.raceCategory.event', 'items.participants'])
+            ->where('invoice_number', $invoice_number)
+            ->firstOrFail();
 
         if ($order->payment_status !== 'settlement') {
             return redirect()->route('front.checkout.payment', $order->invoice_number)
-                ->with('error', 'Selesaikan pembayaran terlebih dahulu sebelum mengunduh invoice resmi.');
+                ?->with('error', 'Selesaikan pembayaran terlebih dahulu sebelum mengunduh invoice resmi.');
         }
 
         $event = $order->items->first()?->ticketTier?->raceCategory?->event;

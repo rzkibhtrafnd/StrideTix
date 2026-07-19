@@ -32,7 +32,7 @@
             <form method="POST" action="{{ route('front.checkout.store', $order->invoice_number) }}" 
                 class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start"
                 x-data="{
-                    timeLeft: {{ $secondsLeft }},
+                    timeLeft: {{ ceil($secondsLeft) }},
                     formatTime() {
                         let minutes = Math.floor(this.timeLeft / 60);
                         let seconds = this.timeLeft % 60;
@@ -48,6 +48,7 @@
                         }, 1000);
                     }
                 }">
+                
                 @csrf
 
                 <div class="lg:col-span-2 space-y-6">

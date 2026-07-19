@@ -19,6 +19,36 @@
                 </a>
             </div>
         </div>
+
+        <div class="mt-6 p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col md:flex-row gap-4 justify-between items-center">
+            <form method="GET" action="{{ route('admin.ticket-tiers.index') }}" class="w-full flex flex-col sm:flex-row gap-3 items-center">
+                
+                <div class="w-full sm:w-64">
+                    <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Cari Nama Tier / Kategori..." class="w-full rounded-lg text-sm border-slate-300 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div class="w-full sm:w-64">
+                    <select name="race_category_id" onchange="this.form.submit()" class="w-full rounded-lg text-sm border-slate-300 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Semua Kategori Kompetisi</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}" @selected(($filters['race_category_id'] ?? '') == $category->id)>
+                                {{ $category->event->title ?? 'N/A' }} - {{ $category->category_name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <x-primary-button type="submit" class="py-2">
+                    <i class="fa-solid fa-filter mr-1.5"></i>{{ __('Filter') }}
+                </x-primary-button>
+
+                @if(!empty($filters['search']) || !empty($filters['race_category_id']))
+                    <a href="{{ route('admin.ticket-tiers.index') }}" class="text-xs text-red-600 font-bold flex items-center px-2 hover:underline whitespace-nowrap">
+                        <i class="fa-solid fa-rotate-left mr-1"></i>Reset Filter
+                    </a>
+                @endif
+            </form>
+        </div>
         
         <div class="mt-6 overflow-x-auto">
             <table class="min-w-full divide-y divide-slate-200">
@@ -70,6 +100,8 @@
                 </tbody>
             </table>
         </div>
-        <div class="mt-4">{{ $tiers->links() }}</div>
+        <div class="mt-4">
+            {{ $tiers->appends(request()->query())->links() }}
+        </div>
     </div>
 </x-app-layout>

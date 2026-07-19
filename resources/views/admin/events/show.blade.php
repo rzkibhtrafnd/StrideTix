@@ -52,8 +52,10 @@
                             <i class="fa-solid fa-map-location-dot text-lg"></i>
                         </div>
                         <div>
-                            <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Lokasi Venue</p>
-                            <p class="text-sm font-bold text-slate-800 truncate max-w-[200px]">{{ $event->location }}</p>
+                            <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Wilayah Regional</p>
+                            <p class="text-sm font-bold text-slate-800 truncate" title="{{ $event->regency_name }}, {{ $event->province_name }}">
+                                {{ $event->regency_name ?? 'N/A' }}, Prov. {{ $event->province_name ?? 'N/A' }}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -77,7 +79,7 @@
                                     </span>
                                 </div>
                                 <div class="text-xs text-slate-500">
-                                    Sisa Slot Gabungan: <span class="font-bold text-emerald-600">{{ $category->available_slot }}</span> <span class="text-slate-500">/ {{ $category->total_slot }} Kuota</span>
+                                    Sisa Slot: <span class="font-bold text-emerald-600">{{ $category->available_slot }}</span> <span class="text-slate-500">/ {{ $category->total_slot }} Kuota</span>
                                 </div>
                             </div>
 
@@ -104,7 +106,7 @@
                                         </div>
                                     @empty
                                         <div class="md:col-span-2 text-center py-3 text-xs text-slate-500 bg-white border border-dashed rounded-lg">
-                                            Belum ada tingkatan fase tiket (Early bird/Regular) yang ditambahkan pada kategori ini.
+                                            Belum ada tingkatan fase tiket (Early bird/Regular) yang ditambahkan.
                                         </div>
                                     @endforelse
                                 </div>
@@ -113,7 +115,7 @@
                     @empty
                         <div class="text-center py-8 text-sm text-slate-500 bg-slate-50 border border-dashed rounded-xl">
                             <i class="fa-solid fa-folder-open text-2xl mb-2 text-slate-300 block"></i>
-                            Belum ada sub-kategori lomba (seperti 5K, 10K) yang didaftarkan untuk event lari ini.
+                            Belum ada sub-kategori lomba yang didaftarkan.
                         </div>
                     @endforelse
                 </div>
@@ -140,8 +142,10 @@
                     <div class="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center shadow-sm mb-3">
                         <i class="fa-solid fa-location-dot text-xl"></i>
                     </div>
+                    <!-- Integrasi visual alamat detail + kota/provinsi -->
                     <p class="text-sm font-bold text-slate-800">{{ $event->location }}</p>
-                    <p class="text-xs text-slate-500 mt-1">Pastikan pelari berada di area *Corral Start* 30 menit sebelum jadwal *Flag-Off*.</p>
+                    <p class="text-xs text-slate-500 mt-1 font-medium">{{ $event->regency_name }}, {{ $event->province_name }}</p>
+                    <p class="text-[11px] text-slate-400 mt-2 italic">Pastikan pelari berada di area Corral Start 30 menit sebelum jadwal Flag-Off.</p>
                     
                     @if($event->google_maps_url)
                         <a href="{{ $event->google_maps_url }}" target="_blank" class="w-full mt-4 inline-flex items-center justify-center text-xs font-semibold text-white bg-slate-800 hover:bg-slate-900 border border-transparent rounded-lg px-4 py-2.5 shadow-sm transition-colors group">
